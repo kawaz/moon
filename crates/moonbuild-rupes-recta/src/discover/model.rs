@@ -135,6 +135,16 @@ impl DiscoveredPackage {
             }
         }
     }
+
+    /// Returns the native output type for this package, defaulting to Shared.
+    pub fn native_output_type(&self) -> moonutil::package::NativeOutputType {
+        self.raw
+            .link
+            .as_ref()
+            .and_then(|l| l.native.as_ref())
+            .and_then(|n| n.output_type)
+            .unwrap_or_default()
+    }
 }
 
 /// The result of a package discovery process.

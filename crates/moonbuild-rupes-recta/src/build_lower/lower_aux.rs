@@ -172,6 +172,15 @@ impl<'a> super::BuildPlanLowerContext<'a> {
         if matches!(self.opt.target_backend, RunBackend::NativeTccRun) {
             cc_flags.push("-D__TINYC__");
         }
+        // Always compile runtime with -fPIC on native targets so it can be
+        // linked into shared libraries. The overhead is negligible on x86-64.
+        if matches!(
+            self.opt.target_backend,
+            RunBackend::Native | RunBackend::Llvm
+        ) && self.opt.os != OperatingSystem::Windows
+        {
+            cc_flags.push("-fPIC");
+        }
         // Add libbacktrace.a if it exists and we're generating a shared library
         if output_ty == CCOutputType::SharedLib && libbacktrace_path.exists() {
             cc_flags.push(
