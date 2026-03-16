@@ -948,7 +948,9 @@ impl<'a> BuildPlanLowerContext<'a> {
     }
 
     /// Build a static library (.a) from compiled C code + runtime + stubs.
-    /// This compiles the .c from link-core to .o, then archives everything into .a.
+    /// This compiles the .c from link-core to .o, recompiles runtime.c without
+    /// stacktrace support (to avoid libbacktrace dependency), then archives
+    /// everything into .a.
     fn lower_build_static_lib(
         &mut self,
         target: BuildTarget,
@@ -957,9 +959,7 @@ impl<'a> BuildPlanLowerContext<'a> {
         let mut sources = vec![];
         // C artifact path from link-core
         self.append_all_artifacts_of(BuildPlanNode::LinkCore(target), &mut sources);
-        // Runtime .o
-        self.append_all_artifacts_of(BuildPlanNode::BuildRuntimeLib, &mut sources);
-        // C stubs archives
+        // C stubs archives (skip runtime - we'll recompile it ourselves)
         for &stub_tgt in &info.link_c_stubs {
             self.append_all_artifacts_of(
                 BuildPlanNode::ArchiveOrLinkCStubs(stub_tgt),
@@ -993,8 +993,9 @@ impl<'a> BuildPlanLowerContext<'a> {
             .display()
             .to_string();
 
-        // Step 1: Compile .c to .o
-        // The first source is the .c file from link-core
+        let resolved_cc = resolve_cc(&self.opt.default_cc, info.cc.as_ref());
+
+        // Step 1: Compile .c (from link-core) to .o
         let c_source = sources[0].display().to_string();
         let obj_output = format!("{}.o", c_source.trim_end_matches(".c"));
 
@@ -1009,7 +1010,7 @@ impl<'a> BuildPlanLowerContext<'a> {
             .expect("Failed to build CC configuration for static library object");
 
         let compile_cmd = make_cc_command_pure(
-            resolve_cc(&self.opt.default_cc, info.cc.as_ref()),
+            resolved_cc.clone(),
             compile_config,
             &info.c_flags.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
             [c_source],
@@ -1018,17 +1019,41 @@ impl<'a> BuildPlanLowerContext<'a> {
             &self.opt.compiler_paths,
         );
 
-        // Step 2: Archive .o + runtime.o + stubs into .a
-        let resolved_cc = resolve_cc(&self.opt.default_cc, info.cc.as_ref());
+        // Step 2: Recompile runtime.c without MOONBIT_ALLOW_STACKTRACE to
+        // eliminate the libbacktrace dependency in the static library.
+        let runtime_c_path = self.opt.runtime_dot_c_path.display().to_string();
+        let runtime_obj_output = format!("{}/runtime_lib.o", pkg_dir);
+
+        let runtime_config = CCConfigBuilder::default()
+            .no_sys_header(true)
+            .output_ty(CCOutputType::Object)
+            .opt_level(CCOptLevel::Speed)
+            .debug_info(self.opt.debug_symbols)
+            .link_moonbitrun(false)
+            .define_use_shared_runtime_macro(false)
+            .build()
+            .expect("Failed to build CC configuration for library runtime");
+
+        // No -DMOONBIT_ALLOW_STACKTRACE: this avoids backtrace_* references
+        let runtime_compile_cmd = make_cc_command_pure(
+            resolved_cc.clone(),
+            runtime_config,
+            &[] as &[&str],
+            [runtime_c_path],
+            &pkg_dir,
+            Some(&runtime_obj_output),
+            &self.opt.compiler_paths,
+        );
+
+        // Step 3: Archive everything into .a
         let ar_config = ArchiverConfigBuilder::default()
             .archive_moonbitrun(true)
             .build()
             .expect("Failed to build archiver configuration for static library");
 
-        // Collect all .o files for archiving: compiled object + runtime + stubs
-        // Note: we skip .a files (like libbacktrace.a) since nested archives
-        // don't work; consumers must link those separately.
-        let mut ar_sources = vec![obj_output.clone()];
+        // Collect all sources for archiving: compiled .o + runtime .o + stubs
+        // Skip .a files since nested archives don't work.
+        let mut ar_sources = vec![obj_output.clone(), runtime_obj_output.clone()];
         for src in &sources[1..] {
             let src_str = src.display().to_string();
             if !src_str.ends_with(".a") {
@@ -1038,10 +1063,12 @@ impl<'a> BuildPlanLowerContext<'a> {
 
         let ar_cmd = make_archiver_command_pure(resolved_cc, ar_config, &ar_sources, &dest);
 
-        // Chain: compile && archive
+        // Chain: compile MoonBit .c && compile runtime.c (no stacktrace) && archive
         let compile_str = moonutil::shlex::join_unix(compile_cmd.iter().map(|x| x.as_str()));
+        let runtime_str =
+            moonutil::shlex::join_unix(runtime_compile_cmd.iter().map(|x| x.as_str()));
         let ar_str = moonutil::shlex::join_unix(ar_cmd.iter().map(|x| x.as_str()));
-        let combined_cmd = format!("{} && {}", compile_str, ar_str);
+        let combined_cmd = format!("{} && {} && {}", compile_str, runtime_str, ar_str);
 
         BuildCommand {
             extra_inputs: vec![],
