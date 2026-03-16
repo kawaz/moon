@@ -403,6 +403,22 @@ pub struct WasmLinkConfig {
     pub flags: Option<Vec<String>>,
 }
 
+/// The type of native library output to produce for non-main packages.
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum NativeOutputType {
+    /// Shared library (.so on Linux, .dylib on macOS, .dll on Windows)
+    Shared,
+    /// Static library (.a on Linux/macOS, .lib on Windows)
+    Static,
+}
+
+impl Default for NativeOutputType {
+    fn default() -> Self {
+        NativeOutputType::Shared
+    }
+}
+
 /// Native C/C++ compilation and linking configuration for MoonBit packages.
 ///
 /// Controls how C stub files and main executables are compiled and linked.
@@ -411,7 +427,11 @@ pub struct WasmLinkConfig {
 #[derive(Debug, Serialize, Deserialize, Clone, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub struct NativeLinkConfig {
-    // FIXME: We have no way to force link a native library when not `is_main`
+    /// The type of library output to produce for non-main packages.
+    /// Defaults to "shared" (.so/.dylib/.dll).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub output_type: Option<NativeOutputType>,
+
     /// Function exports for the final native executable
     #[serde(skip_serializing_if = "Option::is_none")]
     pub exports: Option<Vec<String>>,

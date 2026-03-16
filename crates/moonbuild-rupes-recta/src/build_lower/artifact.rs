@@ -303,7 +303,7 @@ impl LegacyLayout {
         base_dir
     }
 
-    /// Returns the output path for a library artifact (shared library for native,
+    /// Returns the output path for a shared library artifact (.so/.dylib/.dll for native,
     /// .wasm/.js for other backends).
     pub fn library_of_build_target(
         &self,
@@ -319,6 +319,26 @@ impl LegacyLayout {
             "{}{}",
             artifact(pkg_fqn, target.kind),
             make_library_artifact_ext(backend, os, wasm_use_wat),
+        ));
+        base_dir
+    }
+
+    /// Returns the output path for a static library artifact (.a/.lib for native,
+    /// .wasm/.js for other backends).
+    pub fn static_library_of_build_target(
+        &self,
+        pkg_list: &DiscoverResult,
+        target: &BuildTarget,
+        backend: RunBackend,
+        os: OperatingSystem,
+        wasm_use_wat: bool,
+    ) -> PathBuf {
+        let pkg_fqn = &pkg_list.get_package(target.package).fqn;
+        let mut base_dir = self.package_dir(pkg_fqn, backend.into());
+        base_dir.push(format!(
+            "{}{}",
+            artifact(pkg_fqn, target.kind),
+            make_static_library_artifact_ext(backend, os, wasm_use_wat),
         ));
         base_dir
     }
@@ -592,6 +612,20 @@ fn make_library_artifact_ext(
         RunBackend::Wasm | RunBackend::WasmGC => ".wasm",
         RunBackend::Js => ".js",
         RunBackend::Native | RunBackend::Llvm => dynamic_library_ext(os),
+        RunBackend::NativeTccRun => ".rspfile",
+    }
+}
+
+fn make_static_library_artifact_ext(
+    backend: RunBackend,
+    os: OperatingSystem,
+    wasm_use_wat: bool,
+) -> &'static str {
+    match backend {
+        RunBackend::Wasm | RunBackend::WasmGC if wasm_use_wat => ".wat",
+        RunBackend::Wasm | RunBackend::WasmGC => ".wasm",
+        RunBackend::Js => ".js",
+        RunBackend::Native | RunBackend::Llvm => static_library_ext(os),
         RunBackend::NativeTccRun => ".rspfile",
     }
 }
