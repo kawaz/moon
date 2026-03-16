@@ -36,8 +36,16 @@ use crate::{
 /// A concise set of user actions that expand into concrete BuildPlanNode groups.
 #[derive(Clone, Copy, Debug)]
 pub enum UserIntent {
-    /// Build a package (produce either .core or an executable).
-    Build(PackageId),
+    /// Build a package (produce either .core or an executable/library).
+    ///
+    /// When `force_link` is true, always produce linked output even if the
+    /// package is not marked as linkable (i.e. `is-main: false` without
+    /// explicit `link` config). This allows producing library output for
+    /// non-main packages when they are explicitly targeted by `moon build`.
+    Build {
+        pkg: PackageId,
+        force_link: bool,
+    },
     /// Run a package (executable of Source target). Does not actually execute the output.
     Run(PackageId),
     /// Check a package (source/whitebox/blackbox).
@@ -67,14 +75,14 @@ impl UserIntent {
         directive: &InputDirective,
     ) {
         match self {
-            UserIntent::Build(pkg) => {
+            UserIntent::Build { pkg, force_link } => {
                 let pkg_info = resolved.pkg_dirs.get_package(pkg);
                 if !pkg_info.has_implementation() {
                     // Pure virtual package: compile its interface instead of building code
                     out.push(BuildPlanNode::BuildVirtual(pkg));
                 } else {
                     let t = pkg.build_target(TargetKind::Source);
-                    if is_linkable(pkg_info) {
+                    if is_linkable(pkg_info) || force_link {
                         out.push(BuildPlanNode::make_executable(t));
                     } else {
                         out.push(BuildPlanNode::build_core(t));

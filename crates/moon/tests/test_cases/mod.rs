@@ -1282,6 +1282,32 @@ fn no_main_just_init() {
     );
 }
 
+/// Test that `moon build <path>` on a non-main package (is-main:false,
+/// no `link` config) produces linked library output (LinkCore + MakeExecutable nodes).
+#[test]
+fn library_output_no_main() {
+    let dir = TestDir::new("library_output_no_main.in");
+    let output = get_stdout(&dir, ["build", "lib", "--dry-run", "--nostd"]);
+    // The dry-run output should contain both build-package and link-core commands,
+    // proving that the library package is linked even without is-main or link config.
+    assert!(
+        output.contains("link-core"),
+        "Expected link-core command in dry-run output for non-main package targeted by path, got: {}",
+        output
+    );
+    assert!(
+        output.contains("lib.wasm"),
+        "Expected .wasm output for library, got: {}",
+        output
+    );
+    // Verify that -is-main is NOT passed (since this is a library, not a main package)
+    assert!(
+        !output.contains("-is-main"),
+        "Library output should NOT have -is-main flag, got: {}",
+        output
+    );
+}
+
 #[test]
 fn test_pre_build() {
     let dir = TestDir::new("pre_build.in");

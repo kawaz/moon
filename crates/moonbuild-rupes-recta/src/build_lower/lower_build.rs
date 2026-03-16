@@ -812,7 +812,8 @@ impl<'a> BuildPlanLowerContext<'a> {
         target: BuildTarget,
         info: &MakeExecutableInfo,
     ) -> BuildCommand {
-        let _package = self.get_package(target);
+        let package = self.get_package(target);
+        let is_library = !package.raw.is_main;
 
         // Two things needs to be done here:
         // - compile the program (if needed)
@@ -836,28 +837,45 @@ impl<'a> BuildPlanLowerContext<'a> {
             OptLevel::Release => CCOptLevel::Speed,
             OptLevel::Debug => CCOptLevel::Debug,
         };
+        let output_ty = if is_library {
+            CCOutputType::SharedLib
+        } else {
+            CCOutputType::Executable
+        };
         let config = CCConfigBuilder::default()
             .no_sys_header(true)
-            .output_ty(CCOutputType::Executable) // TODO: support compiling to library
+            .output_ty(output_ty)
             .opt_level(opt_level)
             .debug_info(self.opt.debug_symbols)
             .link_moonbitrun(true)
             .define_use_shared_runtime_macro(false)
             .build()
-            .expect("Failed to build CC configuration for executable");
+            .expect("Failed to build CC configuration for executable/library");
 
-        let dest = self
-            .layout
-            .executable_of_build_target(
-                self.packages,
-                &target,
-                self.opt.target_backend,
-                self.opt.os,
-                true,
-                self.opt.output_wat,
-            )
-            .display()
-            .to_string();
+        let dest = if is_library {
+            self.layout
+                .library_of_build_target(
+                    self.packages,
+                    &target,
+                    self.opt.target_backend,
+                    self.opt.os,
+                    self.opt.output_wat,
+                )
+                .display()
+                .to_string()
+        } else {
+            self.layout
+                .executable_of_build_target(
+                    self.packages,
+                    &target,
+                    self.opt.target_backend,
+                    self.opt.os,
+                    true,
+                    self.opt.output_wat,
+                )
+                .display()
+                .to_string()
+        };
 
         // This directory is used for MSVC to place intermediate files.
         // Each package should use their own to minimize conflicts.
