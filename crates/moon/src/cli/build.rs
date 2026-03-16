@@ -207,7 +207,13 @@ fn calc_user_intent(
         let (dir, _) = canonicalize_with_filename(path)?;
         let pkg = filter_pkg_by_dir(resolve_output, &dir)?;
         ensure_package_supports_backend(resolve_output, pkg, target_backend)?;
-        Ok(vec![UserIntent::Build(pkg)].into())
+        // Explicitly targeted package: force link to produce library output
+        // even for non-main packages
+        Ok(vec![UserIntent::Build {
+            pkg,
+            force_link: true,
+        }]
+        .into())
     } else if let Some(package_filter) = package_filter {
         let pkgs = match_packages_by_name_rr(
             resolve_output,
@@ -215,9 +221,13 @@ fn calc_user_intent(
             package_filter,
         );
         ensure_packages_support_backend(resolve_output, pkgs.iter().copied(), target_backend)?;
+        // Explicitly targeted packages: force link to produce library output
         Ok(pkgs
             .into_iter()
-            .map(UserIntent::Build)
+            .map(|pkg| UserIntent::Build {
+                pkg,
+                force_link: true,
+            })
             .collect::<Vec<_>>()
             .into())
     } else {
@@ -238,10 +248,19 @@ fn calc_user_intent(
                     let pkg = resolve_output.pkg_dirs.get_package(pkg_id);
                     !pkg.is_stdlib
                 })
-                .map(UserIntent::Build)
+                .map(|pkg| UserIntent::Build {
+                    pkg,
+                    force_link: false,
+                })
                 .collect()
         } else {
-            linkable_pkgs.into_iter().map(UserIntent::Build).collect()
+            linkable_pkgs
+                .into_iter()
+                .map(|pkg| UserIntent::Build {
+                    pkg,
+                    force_link: false,
+                })
+                .collect()
         };
         Ok(intents.into())
     }
