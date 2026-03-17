@@ -826,7 +826,7 @@ impl<'a> BuildPlanLowerContext<'a> {
         info: &MakeExecutableInfo,
     ) -> BuildCommand {
         let package = self.get_package(target);
-        let is_library = !package.raw.is_main;
+        let is_library = target.kind == TargetKind::Source && !package.raw.is_main;
         let native_output_type = package.native_output_type();
 
         if is_library && native_output_type == NativeOutputType::Static {

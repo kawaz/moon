@@ -582,6 +582,7 @@ impl Link {
                     || n.cc_flags.is_some()
                     || n.cc_link_flags.is_some()
                     || n.exports.is_some()
+                    || n.output_type.is_some()
             }),
         }
     }
