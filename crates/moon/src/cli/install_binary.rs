@@ -582,10 +582,7 @@ fn build_and_install_packages(
             &cli.unstable_feature,
             &target_dir,
             Box::new(move |_, _| {
-                Ok(vec![UserIntent::Build {
-                    pkg: pkg.pkg_id,
-                    force_link: true,
-                }]
+                Ok(vec![UserIntent::Build(pkg.pkg_id)]
                 .into())
             }),
             resolve_output.clone(),

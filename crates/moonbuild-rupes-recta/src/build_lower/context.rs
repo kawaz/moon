@@ -368,7 +368,10 @@ impl<'a> BuildPlanLowerContext<'a> {
             }
             BuildPlanNode::MakeExecutable(target) => {
                 let pkg = self.get_package(target);
-                if !pkg.raw.is_main && self.opt.target_backend.is_native() {
+                if !pkg.raw.is_main
+                    && !target.kind.is_test()
+                    && self.opt.target_backend.is_native()
+                {
                     // Non-main package on native: produce library
                     let output_type = pkg.native_output_type();
                     if output_type == moonutil::package::NativeOutputType::Static {

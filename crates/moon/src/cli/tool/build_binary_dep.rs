@@ -144,13 +144,7 @@ pub(crate) fn run_build_binary_dep(
             preconfig,
             &cli.unstable_feature,
             &target_dir,
-            Box::new(|_, _| {
-                Ok(vec![UserIntent::Build {
-                    pkg,
-                    force_link: true,
-                }]
-                .into())
-            }),
+            Box::new(|_, _| Ok(vec![UserIntent::Build(pkg)].into())),
             // FIXME: cloning is not the best way to do this, it takes in this
             // type only to be returned in build meta. We should refactor later.
             resolve_output.clone(),
