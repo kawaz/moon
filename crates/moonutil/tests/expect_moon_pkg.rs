@@ -611,6 +611,7 @@ fn expect_options() {
                     ),
                     native: Some(
                         NativeLinkConfig {
+                            output_type: None,
                             exports: Some(
                                 [
                                     "f1",

@@ -1,0 +1,8 @@
+{
+  "link": {
+    "native": {
+      "exports": ["hello"],
+      "output-type": "static"
+    }
+  }
+}

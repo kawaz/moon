@@ -371,8 +371,9 @@ impl<'a> BuildPlanLowerContext<'a> {
                 if !pkg.raw.is_main
                     && !target.kind.is_test()
                     && self.opt.target_backend.is_native()
+                    && pkg.is_native_library()
                 {
-                    // Non-main package on native: produce library
+                    // Non-main package on native with explicit library config: produce library
                     let output_type = pkg.native_output_type();
                     if output_type == moonutil::package::NativeOutputType::Static {
                         out.push(self.layout.static_library_of_build_target(

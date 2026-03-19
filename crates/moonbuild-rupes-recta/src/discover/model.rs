@@ -145,6 +145,18 @@ impl DiscoveredPackage {
             .and_then(|n| n.output_type)
             .unwrap_or_default()
     }
+
+    /// Returns true if this package explicitly requests library output via
+    /// `exports` or `output-type` in `link.native`. Having only `cc`/`cc-flags`
+    /// does NOT constitute a library output request — those are compiler
+    /// customization options that should work on both main and non-main packages.
+    pub fn is_native_library(&self) -> bool {
+        self.raw
+            .link
+            .as_ref()
+            .and_then(|l| l.native.as_ref())
+            .is_some_and(|n| n.exports.is_some() || n.output_type.is_some())
+    }
 }
 
 /// The result of a package discovery process.

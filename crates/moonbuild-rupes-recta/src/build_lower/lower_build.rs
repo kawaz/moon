@@ -813,7 +813,8 @@ impl<'a> BuildPlanLowerContext<'a> {
         info: &MakeExecutableInfo,
     ) -> BuildCommand {
         let package = self.get_package(target);
-        let is_library = target.kind == TargetKind::Source && !package.raw.is_main;
+        let is_library =
+            target.kind == TargetKind::Source && !package.raw.is_main && package.is_native_library();
         let native_output_type = package.native_output_type();
 
         if is_library && native_output_type == NativeOutputType::Static {
@@ -982,6 +983,17 @@ impl<'a> BuildPlanLowerContext<'a> {
 
         let resolved_cc = resolve_cc(&self.opt.default_cc, info.cc.as_ref());
 
+        // Compile objects with -fPIC on non-Windows so the .a can also be
+        // linked into shared libraries if needed.
+        let mut extra_c_flags: Vec<String> = info.c_flags.clone();
+        if matches!(
+            self.opt.target_backend,
+            RunBackend::Native | RunBackend::Llvm
+        ) && self.opt.os != OperatingSystem::Windows
+        {
+            extra_c_flags.push("-fPIC".to_string());
+        }
+
         // Step 1: Compile .c (from link-core) to .o
         let c_source = sources[0].display().to_string();
         let obj_output = format!("{}.o", c_source.trim_end_matches(".c"));
@@ -999,7 +1011,7 @@ impl<'a> BuildPlanLowerContext<'a> {
         let compile_cmd = make_cc_command_pure(
             resolved_cc.clone(),
             compile_config,
-            &info.c_flags.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+            &extra_c_flags.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
             [c_source],
             &pkg_dir,
             Some(&obj_output),
@@ -1021,11 +1033,21 @@ impl<'a> BuildPlanLowerContext<'a> {
             .build()
             .expect("Failed to build CC configuration for library runtime");
 
-        // No -DMOONBIT_ALLOW_STACKTRACE: this avoids backtrace_* references
+        // No -DMOONBIT_ALLOW_STACKTRACE: this avoids backtrace_* references.
+        // Still pass -fPIC for consistency with the main object.
+        let runtime_extra_flags: Vec<&str> = if matches!(
+            self.opt.target_backend,
+            RunBackend::Native | RunBackend::Llvm
+        ) && self.opt.os != OperatingSystem::Windows
+        {
+            vec!["-fPIC"]
+        } else {
+            vec![]
+        };
         let runtime_compile_cmd = make_cc_command_pure(
             resolved_cc.clone(),
             runtime_config,
-            &[] as &[&str],
+            &runtime_extra_flags,
             [runtime_c_path],
             &pkg_dir,
             Some(&runtime_obj_output),
