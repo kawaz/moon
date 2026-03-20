@@ -1,0 +1,10 @@
+{
+  "link": {
+    "native": {
+      "exports": [
+        "hello:my_hello",
+        "do_nothing:my_do_nothing"
+      ]
+    }
+  }
+}

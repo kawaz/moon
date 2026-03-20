@@ -135,6 +135,18 @@ impl DiscoveredPackage {
             }
         }
     }
+
+    /// Returns true if this package has `exports` in `link.native`,
+    /// making it a candidate for native library output when `--output-type`
+    /// is specified on the CLI. Having only `cc`/`cc-flags` does NOT
+    /// constitute a library output candidate.
+    pub fn is_native_library(&self) -> bool {
+        self.raw
+            .link
+            .as_ref()
+            .and_then(|l| l.native.as_ref())
+            .is_some_and(|n| n.exports.is_some())
+    }
 }
 
 /// The result of a package discovery process.

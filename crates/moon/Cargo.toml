@@ -59,6 +59,7 @@ rand.workspace = true
 tempfile.workspace = true
 shlex.workspace = true
 derive_builder.workspace = true
+regex.workspace = true
 sha2.workspace = true
 similar.workspace = true
 

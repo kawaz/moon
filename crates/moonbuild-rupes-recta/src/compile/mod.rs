@@ -74,6 +74,8 @@ pub struct CompileConfig {
     pub info_no_alias: bool,
     /// Preferred default C/C++ toolchain to use for native builds
     pub default_cc: CC,
+    /// Native library output type (shared/static), set via CLI --output-type
+    pub native_output_type: Option<moonutil::package::NativeOutputType>,
 }
 
 /// The output information of the compilation.
@@ -155,6 +157,7 @@ pub fn compile(
         default_cc: cx.default_cc.clone(),
         os: OperatingSystem::from_str(std::env::consts::OS).expect("Unknown"),
         runtime_dot_c_path: MOON_DIRS.moon_lib_path.join("runtime.c"), // FIXME: don't calculate here
+        native_output_type: cx.native_output_type,
     };
     let res = build_lower::lower_build_plan(resolve_output, &plan, &lower_env)?;
 

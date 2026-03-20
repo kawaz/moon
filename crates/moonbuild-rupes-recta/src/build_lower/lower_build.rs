@@ -23,12 +23,12 @@ use std::path::{Path, PathBuf};
 use moonutil::{
     compiler_flags::{
         ArchiverConfigBuilder, CC, CCConfigBuilder, LinkerConfigBuilder, OptLevel as CCOptLevel,
-        OutputType as CCOutputType, make_archiver_command, make_cc_command, make_cc_command_pure,
-        make_linker_command_pure, resolve_cc,
+        OutputType as CCOutputType, make_archiver_command, make_archiver_command_pure,
+        make_cc_command, make_cc_command_pure, make_linker_command_pure, resolve_cc,
     },
     cond_expr::OptLevel,
     mooncakes::{CORE_MODULE, ModuleId},
-    package::JsFormat,
+    package::{JsFormat, NativeOutputType},
 };
 use petgraph::Direction;
 use tracing::{Level, instrument};
@@ -509,9 +509,48 @@ impl<'a> BuildPlanLowerContext<'a> {
             extra_inputs.push(config_path);
         }
 
+        // Build the moonc link-core command args
+        let moonc_args = cmd.build_command(&*moonutil::BINARIES.moonc);
+
+        // Workaround: moonc native backend ignores the alias part of exported_functions
+        // entries (e.g. "hello:my_hello"). Chain a postprocess step to generate
+        // alias wrapper functions in the output C file.
+        let has_aliases = package
+            .exported_functions(self.opt.target_backend.into())
+            .is_some_and(|e| e.iter().any(|s| s.contains(':')));
+        let is_native = self.opt.target_backend.is_native();
+
+        let commandline = if is_native && has_aliases {
+            let moonc_cmd_str =
+                moonutil::shlex::join_unix(moonc_args.iter().map(|x| x.as_str()));
+            let moon = moonutil::BINARIES
+                .moonbuild
+                .to_str()
+                .expect("moon path is valid UTF-8");
+            let out_path = cmd.output_path.display().to_string();
+            let exports_str = package
+                .exported_functions(self.opt.target_backend.into())
+                .unwrap()
+                .join(",");
+            let postprocess_cmd = moonutil::shlex::join_unix(
+                [
+                    moon,
+                    "tool",
+                    "postprocess-native-exports",
+                    &out_path,
+                    &exports_str,
+                ]
+                .iter()
+                .copied(),
+            );
+            Commandline::Verbatim(format!("{} && {}", moonc_cmd_str, postprocess_cmd))
+        } else {
+            moonc_args.into()
+        };
+
         BuildCommand {
             extra_inputs,
-            commandline: cmd.build_command(&*moonutil::BINARIES.moonc).into(),
+            commandline,
         }
     }
 
@@ -812,12 +851,21 @@ impl<'a> BuildPlanLowerContext<'a> {
         target: BuildTarget,
         info: &MakeExecutableInfo,
     ) -> BuildCommand {
-        let _package = self.get_package(target);
+        let package = self.get_package(target);
+        let is_library = self.opt.native_output_type.is_some()
+            && target.kind == TargetKind::Source
+            && !package.raw.is_main
+            && package.is_native_library();
+
+        if let Some(NativeOutputType::Static) = self.opt.native_output_type {
+            if is_library {
+                return self.lower_build_static_lib(target, info);
+            }
+        }
 
         // Two things needs to be done here:
         // - compile the program (if needed)
         // - link with runtime library & artifacts of other C stubs
-        // let cc_cmd = make_cc_command_pure(cc, config, user_cc_flags, src, dest_dir, dest, paths);
 
         let mut sources = vec![];
         // C artifact path
@@ -836,28 +884,45 @@ impl<'a> BuildPlanLowerContext<'a> {
             OptLevel::Release => CCOptLevel::Speed,
             OptLevel::Debug => CCOptLevel::Debug,
         };
+        let output_ty = if is_library {
+            CCOutputType::SharedLib
+        } else {
+            CCOutputType::Executable
+        };
         let config = CCConfigBuilder::default()
             .no_sys_header(true)
-            .output_ty(CCOutputType::Executable) // TODO: support compiling to library
+            .output_ty(output_ty)
             .opt_level(opt_level)
             .debug_info(self.opt.debug_symbols)
             .link_moonbitrun(true)
             .define_use_shared_runtime_macro(false)
             .build()
-            .expect("Failed to build CC configuration for executable");
+            .expect("Failed to build CC configuration for executable/library");
 
-        let dest = self
-            .layout
-            .executable_of_build_target(
-                self.packages,
-                &target,
-                self.opt.target_backend,
-                self.opt.os,
-                true,
-                self.opt.output_wat,
-            )
-            .display()
-            .to_string();
+        let dest = if is_library {
+            self.layout
+                .library_of_build_target(
+                    self.packages,
+                    &target,
+                    self.opt.target_backend,
+                    self.opt.os,
+                    self.opt.output_wat,
+                )
+                .display()
+                .to_string()
+        } else {
+            self.layout
+                .executable_of_build_target(
+                    self.packages,
+                    &target,
+                    self.opt.target_backend,
+                    self.opt.os,
+                    true,
+                    self.opt.output_wat,
+                )
+                .display()
+                .to_string()
+        };
 
         // This directory is used for MSVC to place intermediate files.
         // Each package should use their own to minimize conflicts.
@@ -908,6 +973,146 @@ impl<'a> BuildPlanLowerContext<'a> {
         BuildCommand {
             extra_inputs: vec![],
             commandline,
+        }
+    }
+
+    /// Build a static library (.a) from compiled C code + runtime + stubs.
+    /// This compiles the .c from link-core to .o, recompiles runtime.c without
+    /// stacktrace support (to avoid libbacktrace dependency), then archives
+    /// everything into .a.
+    fn lower_build_static_lib(
+        &mut self,
+        target: BuildTarget,
+        info: &MakeExecutableInfo,
+    ) -> BuildCommand {
+        let mut sources = vec![];
+        // C artifact path from link-core
+        self.append_all_artifacts_of(BuildPlanNode::LinkCore(target), &mut sources);
+        // C stubs archives (skip runtime - we'll recompile it ourselves)
+        for &stub_tgt in &info.link_c_stubs {
+            self.append_all_artifacts_of(
+                BuildPlanNode::ArchiveOrLinkCStubs(stub_tgt),
+                &mut sources,
+            );
+        }
+
+        let opt_level = match self.opt.opt_level {
+            OptLevel::Release => CCOptLevel::Speed,
+            OptLevel::Debug => CCOptLevel::Debug,
+        };
+
+        let pkg_dir = self
+            .layout
+            .package_dir(
+                &self.get_package(target).fqn,
+                self.opt.target_backend.into(),
+            )
+            .display()
+            .to_string();
+
+        let dest = self
+            .layout
+            .static_library_of_build_target(
+                self.packages,
+                &target,
+                self.opt.target_backend,
+                self.opt.os,
+                self.opt.output_wat,
+            )
+            .display()
+            .to_string();
+
+        let resolved_cc = resolve_cc(&self.opt.default_cc, info.cc.as_ref());
+
+        // Step 1: Compile .c (from link-core) to .o
+        let c_source = sources[0].display().to_string();
+        let obj_output = format!("{}.o", c_source.trim_end_matches(".c"));
+
+        let compile_config = CCConfigBuilder::default()
+            .no_sys_header(true)
+            .output_ty(CCOutputType::Object)
+            .opt_level(opt_level)
+            .debug_info(self.opt.debug_symbols)
+            .link_moonbitrun(false)
+            .define_use_shared_runtime_macro(false)
+            .build()
+            .expect("Failed to build CC configuration for static library object");
+
+        let mut compile_cmd = make_cc_command_pure(
+            resolved_cc.clone(),
+            compile_config,
+            &info.c_flags.iter().map(|s| s.as_str()).collect::<Vec<_>>(),
+            [c_source],
+            &pkg_dir,
+            Some(&obj_output),
+            &self.opt.compiler_paths,
+        );
+
+        // Step 2: Recompile runtime.c without MOONBIT_ALLOW_STACKTRACE to
+        // eliminate the libbacktrace dependency in the static library.
+        let runtime_c_path = self.opt.runtime_dot_c_path.display().to_string();
+        let runtime_obj_output = format!("{}/runtime_lib.o", pkg_dir);
+
+        let runtime_config = CCConfigBuilder::default()
+            .no_sys_header(true)
+            .output_ty(CCOutputType::Object)
+            .opt_level(CCOptLevel::Speed)
+            .debug_info(self.opt.debug_symbols)
+            .link_moonbitrun(false)
+            .define_use_shared_runtime_macro(false)
+            .build()
+            .expect("Failed to build CC configuration for library runtime");
+
+        // No -DMOONBIT_ALLOW_STACKTRACE: this avoids backtrace_* references.
+        let mut runtime_compile_cmd = make_cc_command_pure(
+            resolved_cc.clone(),
+            runtime_config,
+            &[] as &[&str],
+            [runtime_c_path],
+            &pkg_dir,
+            Some(&runtime_obj_output),
+            &self.opt.compiler_paths,
+        );
+
+        // Append -fPIC after command generation so it doesn't pollute
+        // user_cc_flags (which would suppress optimization flags like -O2).
+        if matches!(
+            self.opt.target_backend,
+            RunBackend::Native | RunBackend::Llvm
+        ) && self.opt.os != OperatingSystem::Windows
+        {
+            compile_cmd.push("-fPIC".to_string());
+            runtime_compile_cmd.push("-fPIC".to_string());
+        }
+
+        // Step 3: Archive everything into .a
+        let ar_config = ArchiverConfigBuilder::default()
+            .archive_moonbitrun(true)
+            .build()
+            .expect("Failed to build archiver configuration for static library");
+
+        // Collect all sources for archiving: compiled .o + runtime .o + stubs
+        // Skip .a files since nested archives don't work.
+        let mut ar_sources = vec![obj_output.clone(), runtime_obj_output.clone()];
+        for src in &sources[1..] {
+            let src_str = src.display().to_string();
+            if !src_str.ends_with(".a") {
+                ar_sources.push(src_str);
+            }
+        }
+
+        let ar_cmd = make_archiver_command_pure(resolved_cc, ar_config, &ar_sources, &dest);
+
+        // Chain: compile MoonBit .c && compile runtime.c (no stacktrace) && archive
+        let compile_str = moonutil::shlex::join_unix(compile_cmd.iter().map(|x| x.as_str()));
+        let runtime_str =
+            moonutil::shlex::join_unix(runtime_compile_cmd.iter().map(|x| x.as_str()));
+        let ar_str = moonutil::shlex::join_unix(ar_cmd.iter().map(|x| x.as_str()));
+        let combined_cmd = format!("{} && {} && {}", compile_str, runtime_str, ar_str);
+
+        BuildCommand {
+            extra_inputs: vec![],
+            commandline: Commandline::Verbatim(combined_cmd),
         }
     }
 

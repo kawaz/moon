@@ -130,6 +130,7 @@ Build the current package
 
 * `--frozen` — Do not sync dependencies, assuming local dependencies are up-to-date
 * `-w`, `--watch` — Monitor the file system and automatically build artifacts
+* `--output-type <OUTPUT_TYPE>` — Output type for native library builds (shared or static). Only valid with --target native
 
 
 

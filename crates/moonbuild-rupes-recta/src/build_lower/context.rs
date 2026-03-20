@@ -30,7 +30,7 @@ use crate::{
     build_lower::artifact::LegacyLayout,
     build_plan::{BuildPlan, FileDependencyKind},
     discover::{DiscoverResult, DiscoveredPackage},
-    model::{BuildPlanNode, BuildTarget, RunBackend},
+    model::{BuildPlanNode, BuildTarget, RunBackend, TargetKind},
     pkg_solve::DepRelationship,
 };
 use moonutil::BINARIES;
@@ -367,14 +367,42 @@ impl<'a> BuildPlanLowerContext<'a> {
                 ));
             }
             BuildPlanNode::MakeExecutable(target) => {
-                out.push(self.layout.executable_of_build_target(
-                    self.packages,
-                    &target,
-                    self.opt.target_backend,
-                    self.opt.os,
-                    true,
-                    self.opt.output_wat,
-                ))
+                let pkg = self.get_package(target);
+                if self.opt.native_output_type.is_some()
+                    && target.kind == TargetKind::Source
+                    && !pkg.raw.is_main
+                    && self.opt.target_backend.is_native()
+                    && pkg.is_native_library()
+                {
+                    if let Some(moonutil::package::NativeOutputType::Static) =
+                        self.opt.native_output_type
+                    {
+                        out.push(self.layout.static_library_of_build_target(
+                            self.packages,
+                            &target,
+                            self.opt.target_backend,
+                            self.opt.os,
+                            self.opt.output_wat,
+                        ))
+                    } else {
+                        out.push(self.layout.library_of_build_target(
+                            self.packages,
+                            &target,
+                            self.opt.target_backend,
+                            self.opt.os,
+                            self.opt.output_wat,
+                        ))
+                    }
+                } else {
+                    out.push(self.layout.executable_of_build_target(
+                        self.packages,
+                        &target,
+                        self.opt.target_backend,
+                        self.opt.os,
+                        true,
+                        self.opt.output_wat,
+                    ))
+                }
             }
             BuildPlanNode::GenerateTestInfo(target) => {
                 let meta = if let FileDependencyKind::GenerateTestInfo { meta } = edge {

@@ -25,6 +25,7 @@ use moonutil::common::TargetBackend;
 use moonutil::common::lower_surface_targets;
 use moonutil::dirs::PackageDirs;
 use moonutil::mooncakes::sync::AutoSyncFlags;
+use moonutil::package::NativeOutputType;
 use std::path::Path;
 use std::path::PathBuf;
 use tracing::{Level, instrument};
@@ -73,6 +74,18 @@ pub(crate) struct BuildSubcommand {
     // when package is specified, specify the alias of the binary package artifact to install
     #[clap(long, hide = true, requires("package"))]
     pub bin_alias: Option<String>,
+
+    /// Output type for native library builds [possible values: shared, static]
+    #[clap(long, value_parser = parse_output_type)]
+    pub output_type: Option<NativeOutputType>,
+}
+
+fn parse_output_type(s: &str) -> Result<NativeOutputType, String> {
+    match s {
+        "shared" => Ok(NativeOutputType::Shared),
+        "static" => Ok(NativeOutputType::Static),
+        _ => Err(format!("invalid output type '{}', expected 'shared' or 'static'", s)),
+    }
 }
 
 #[instrument(skip_all)]
@@ -135,6 +148,17 @@ fn run_build_rr(
     _watch: bool,
     selected_target_backend: Option<TargetBackend>,
 ) -> anyhow::Result<WatchOutput> {
+    // Validate: --output-type requires a native backend target
+    if cmd.output_type.is_some() {
+        let is_native = selected_target_backend
+            .is_some_and(|t| matches!(t, TargetBackend::Native | TargetBackend::LLVM));
+        if !is_native {
+            anyhow::bail!(
+                "--output-type requires --target native or --target llvm"
+            );
+        }
+    }
+
     let resolve_cfg = moonbuild_rupes_recta::ResolveConfig::new(
         cmd.auto_sync_flags.clone(),
         !cmd.build_flags.std(),
@@ -195,7 +219,7 @@ pub(crate) fn plan_build_rr_from_resolved(
     selected_target_backend: Option<TargetBackend>,
     resolve_output: moonbuild_rupes_recta::ResolveOutput,
 ) -> anyhow::Result<(rr_build::BuildMeta, rr_build::BuildInput)> {
-    let preconfig = preconfig_compile(
+    let mut preconfig = preconfig_compile(
         &cmd.auto_sync_flags,
         cli,
         &cmd.build_flags,
@@ -203,6 +227,7 @@ pub(crate) fn plan_build_rr_from_resolved(
         target_dir,
         RunMode::Build,
     );
+    preconfig.native_output_type = cmd.output_type;
 
     rr_build::plan_build_from_resolved(
         preconfig,

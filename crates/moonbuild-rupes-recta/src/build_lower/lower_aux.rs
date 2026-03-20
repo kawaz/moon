@@ -181,7 +181,7 @@ impl<'a> super::BuildPlanLowerContext<'a> {
             );
         }
 
-        let cc_cmd = make_cc_command_pure(
+        let mut cc_cmd = make_cc_command_pure(
             resolved_cc,
             CCConfigBuilder::default()
                 .no_sys_header(true)
@@ -198,6 +198,16 @@ impl<'a> super::BuildPlanLowerContext<'a> {
             Some(&artifact_path.display().to_string()),
             &self.opt.compiler_paths,
         );
+
+        // Append -fPIC after command generation so it doesn't pollute
+        // user_cc_flags (which would suppress optimization flags like -O2).
+        if matches!(
+            self.opt.target_backend,
+            RunBackend::Native | RunBackend::Llvm
+        ) && self.opt.os != OperatingSystem::Windows
+        {
+            cc_cmd.push("-fPIC".to_string());
+        }
 
         BuildCommand {
             extra_inputs: vec![runtime_c_path],

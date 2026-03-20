@@ -718,7 +718,7 @@ fn test_moon_run_single_file_dry_run() {
         expect![[r#"
             moonc build-package ./single.mbt -o ./_build/native/debug/build/single/single.core -pkg moon/test/single -is-main -std-path '$MOON_HOME/lib/core/_build/native/release/bundle' -i '$MOON_HOME/lib/core/_build/native/release/bundle/abort/abort.mi:abort' -i '$MOON_HOME/lib/core/_build/native/release/bundle/argparse/argparse.mi:argparse' -i '$MOON_HOME/lib/core/_build/native/release/bundle/array/array.mi:array' -i '$MOON_HOME/lib/core/_build/native/release/bundle/encoding/ascii/ascii.mi:ascii' -i '$MOON_HOME/lib/core/_build/native/release/bundle/encoding/base64/base64.mi:base64' -i '$MOON_HOME/lib/core/_build/native/release/bundle/bench/bench.mi:bench' -i '$MOON_HOME/lib/core/_build/native/release/bundle/bigint/bigint.mi:bigint' -i '$MOON_HOME/lib/core/_build/native/release/bundle/bool/bool.mi:bool' -i '$MOON_HOME/lib/core/_build/native/release/bundle/buffer/buffer.mi:buffer' -i '$MOON_HOME/lib/core/_build/native/release/bundle/builtin/builtin.mi:builtin' -i '$MOON_HOME/lib/core/_build/native/release/bundle/byte/byte.mi:byte' -i '$MOON_HOME/lib/core/_build/native/release/bundle/bytes/bytes.mi:bytes' -i '$MOON_HOME/lib/core/_build/native/release/bundle/char/char.mi:char' -i '$MOON_HOME/lib/core/_build/native/release/bundle/cmp/cmp.mi:cmp' -i '$MOON_HOME/lib/core/_build/native/release/bundle/coverage/coverage.mi:coverage' -i '$MOON_HOME/lib/core/_build/native/release/bundle/debug/debug.mi:debug' -i '$MOON_HOME/lib/core/_build/native/release/bundle/deque/deque.mi:deque' -i '$MOON_HOME/lib/core/_build/native/release/bundle/double/double.mi:double' -i '$MOON_HOME/lib/core/_build/native/release/bundle/env/env.mi:env' -i '$MOON_HOME/lib/core/_build/native/release/bundle/error/error.mi:error' -i '$MOON_HOME/lib/core/_build/native/release/bundle/float/float.mi:float' -i '$MOON_HOME/lib/core/_build/native/release/bundle/hashmap/hashmap.mi:hashmap' -i '$MOON_HOME/lib/core/_build/native/release/bundle/hashset/hashset.mi:hashset' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/array/array.mi:immut/array' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/hashmap/hashmap.mi:immut/hashmap' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/hashset/hashset.mi:immut/hashset' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/priority_queue/priority_queue.mi:immut/priority_queue' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/sorted_map/sorted_map.mi:immut/sorted_map' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/sorted_set/sorted_set.mi:immut/sorted_set' -i '$MOON_HOME/lib/core/_build/native/release/bundle/int/int.mi:int' -i '$MOON_HOME/lib/core/_build/native/release/bundle/int16/int16.mi:int16' -i '$MOON_HOME/lib/core/_build/native/release/bundle/int64/int64.mi:int64' -i '$MOON_HOME/lib/core/_build/native/release/bundle/json/json.mi:json' -i '$MOON_HOME/lib/core/_build/native/release/bundle/list/list.mi:list' -i '$MOON_HOME/lib/core/_build/native/release/bundle/math/math.mi:math' -i '$MOON_HOME/lib/core/_build/native/release/bundle/option/option.mi:option' -i '$MOON_HOME/lib/core/_build/native/release/bundle/prelude/prelude.mi:prelude' -i '$MOON_HOME/lib/core/_build/native/release/bundle/priority_queue/priority_queue.mi:priority_queue' -i '$MOON_HOME/lib/core/_build/native/release/bundle/queue/queue.mi:queue' -i '$MOON_HOME/lib/core/_build/native/release/bundle/quickcheck/quickcheck.mi:quickcheck' -i '$MOON_HOME/lib/core/_build/native/release/bundle/random/random.mi:random' -i '$MOON_HOME/lib/core/_build/native/release/bundle/ref/ref.mi:ref' -i '$MOON_HOME/lib/core/_build/native/release/bundle/result/result.mi:result' -i '$MOON_HOME/lib/core/_build/native/release/bundle/set/set.mi:set' -i '$MOON_HOME/lib/core/_build/native/release/bundle/sorted_map/sorted_map.mi:sorted_map' -i '$MOON_HOME/lib/core/_build/native/release/bundle/sorted_set/sorted_set.mi:sorted_set' -i '$MOON_HOME/lib/core/_build/native/release/bundle/quickcheck/splitmix/splitmix.mi:splitmix' -i '$MOON_HOME/lib/core/_build/native/release/bundle/strconv/strconv.mi:strconv' -i '$MOON_HOME/lib/core/_build/native/release/bundle/string/string.mi:string' -i '$MOON_HOME/lib/core/_build/native/release/bundle/test/test.mi:test' -i '$MOON_HOME/lib/core/_build/native/release/bundle/tuple/tuple.mi:tuple' -i '$MOON_HOME/lib/core/_build/native/release/bundle/uint/uint.mi:uint' -i '$MOON_HOME/lib/core/_build/native/release/bundle/uint16/uint16.mi:uint16' -i '$MOON_HOME/lib/core/_build/native/release/bundle/uint64/uint64.mi:uint64' -i '$MOON_HOME/lib/core/_build/native/release/bundle/unit/unit.mi:unit' -i '$MOON_HOME/lib/core/_build/native/release/bundle/encoding/utf16/utf16.mi:utf16' -i '$MOON_HOME/lib/core/_build/native/release/bundle/encoding/utf8/utf8.mi:utf8' -pkg-sources moon/test/single:. -target native -g -O0 -workspace-path . -all-pkgs ./_build/native/debug/build/all_pkgs.json
             moonc link-core '$MOON_HOME/lib/core/_build/native/release/bundle/abort/abort.core' '$MOON_HOME/lib/core/_build/native/release/bundle/core.core' ./_build/native/debug/build/single/single.core -main moon/test/single -o ./_build/native/debug/build/single/single.c -pkg-config-path ./moon.pkg.json -pkg-sources moon/test/single:. -pkg-sources 'moonbitlang/core:$MOON_HOME/lib/core' -target native -g -O0
-            cc -o ./_build/native/debug/build/runtime.o '-I$MOON_HOME/include' -g -c -fwrapv -fno-strict-aliasing '$MOON_HOME/lib/runtime.c' -DMOONBIT_ALLOW_STACKTRACE
+            cc -o ./_build/native/debug/build/runtime.o '-I$MOON_HOME/include' -g -c -fwrapv -fno-strict-aliasing '$MOON_HOME/lib/runtime.c' -DMOONBIT_ALLOW_STACKTRACE -fPIC
             cc -o ./_build/native/debug/build/single/single.exe '-I$MOON_HOME/include' -g -fwrapv -fno-strict-aliasing '$MOON_HOME/lib/libmoonbitrun.o' ./_build/native/debug/build/single/single.c ./_build/native/debug/build/runtime.o -lm '$MOON_HOME/lib/libbacktrace.a'
             ./_build/native/debug/build/single/single.exe
         "#]],
@@ -742,7 +742,7 @@ fn test_moon_run_single_file_dry_run() {
         expect![[r#"
             moonc build-package ./single.mbt -o ./_build/native/release/build/single/single.core -pkg moon/test/single -is-main -std-path '$MOON_HOME/lib/core/_build/native/release/bundle' -i '$MOON_HOME/lib/core/_build/native/release/bundle/abort/abort.mi:abort' -i '$MOON_HOME/lib/core/_build/native/release/bundle/argparse/argparse.mi:argparse' -i '$MOON_HOME/lib/core/_build/native/release/bundle/array/array.mi:array' -i '$MOON_HOME/lib/core/_build/native/release/bundle/encoding/ascii/ascii.mi:ascii' -i '$MOON_HOME/lib/core/_build/native/release/bundle/encoding/base64/base64.mi:base64' -i '$MOON_HOME/lib/core/_build/native/release/bundle/bench/bench.mi:bench' -i '$MOON_HOME/lib/core/_build/native/release/bundle/bigint/bigint.mi:bigint' -i '$MOON_HOME/lib/core/_build/native/release/bundle/bool/bool.mi:bool' -i '$MOON_HOME/lib/core/_build/native/release/bundle/buffer/buffer.mi:buffer' -i '$MOON_HOME/lib/core/_build/native/release/bundle/builtin/builtin.mi:builtin' -i '$MOON_HOME/lib/core/_build/native/release/bundle/byte/byte.mi:byte' -i '$MOON_HOME/lib/core/_build/native/release/bundle/bytes/bytes.mi:bytes' -i '$MOON_HOME/lib/core/_build/native/release/bundle/char/char.mi:char' -i '$MOON_HOME/lib/core/_build/native/release/bundle/cmp/cmp.mi:cmp' -i '$MOON_HOME/lib/core/_build/native/release/bundle/coverage/coverage.mi:coverage' -i '$MOON_HOME/lib/core/_build/native/release/bundle/debug/debug.mi:debug' -i '$MOON_HOME/lib/core/_build/native/release/bundle/deque/deque.mi:deque' -i '$MOON_HOME/lib/core/_build/native/release/bundle/double/double.mi:double' -i '$MOON_HOME/lib/core/_build/native/release/bundle/env/env.mi:env' -i '$MOON_HOME/lib/core/_build/native/release/bundle/error/error.mi:error' -i '$MOON_HOME/lib/core/_build/native/release/bundle/float/float.mi:float' -i '$MOON_HOME/lib/core/_build/native/release/bundle/hashmap/hashmap.mi:hashmap' -i '$MOON_HOME/lib/core/_build/native/release/bundle/hashset/hashset.mi:hashset' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/array/array.mi:immut/array' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/hashmap/hashmap.mi:immut/hashmap' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/hashset/hashset.mi:immut/hashset' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/priority_queue/priority_queue.mi:immut/priority_queue' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/sorted_map/sorted_map.mi:immut/sorted_map' -i '$MOON_HOME/lib/core/_build/native/release/bundle/immut/sorted_set/sorted_set.mi:immut/sorted_set' -i '$MOON_HOME/lib/core/_build/native/release/bundle/int/int.mi:int' -i '$MOON_HOME/lib/core/_build/native/release/bundle/int16/int16.mi:int16' -i '$MOON_HOME/lib/core/_build/native/release/bundle/int64/int64.mi:int64' -i '$MOON_HOME/lib/core/_build/native/release/bundle/json/json.mi:json' -i '$MOON_HOME/lib/core/_build/native/release/bundle/list/list.mi:list' -i '$MOON_HOME/lib/core/_build/native/release/bundle/math/math.mi:math' -i '$MOON_HOME/lib/core/_build/native/release/bundle/option/option.mi:option' -i '$MOON_HOME/lib/core/_build/native/release/bundle/prelude/prelude.mi:prelude' -i '$MOON_HOME/lib/core/_build/native/release/bundle/priority_queue/priority_queue.mi:priority_queue' -i '$MOON_HOME/lib/core/_build/native/release/bundle/queue/queue.mi:queue' -i '$MOON_HOME/lib/core/_build/native/release/bundle/quickcheck/quickcheck.mi:quickcheck' -i '$MOON_HOME/lib/core/_build/native/release/bundle/random/random.mi:random' -i '$MOON_HOME/lib/core/_build/native/release/bundle/ref/ref.mi:ref' -i '$MOON_HOME/lib/core/_build/native/release/bundle/result/result.mi:result' -i '$MOON_HOME/lib/core/_build/native/release/bundle/set/set.mi:set' -i '$MOON_HOME/lib/core/_build/native/release/bundle/sorted_map/sorted_map.mi:sorted_map' -i '$MOON_HOME/lib/core/_build/native/release/bundle/sorted_set/sorted_set.mi:sorted_set' -i '$MOON_HOME/lib/core/_build/native/release/bundle/quickcheck/splitmix/splitmix.mi:splitmix' -i '$MOON_HOME/lib/core/_build/native/release/bundle/strconv/strconv.mi:strconv' -i '$MOON_HOME/lib/core/_build/native/release/bundle/string/string.mi:string' -i '$MOON_HOME/lib/core/_build/native/release/bundle/test/test.mi:test' -i '$MOON_HOME/lib/core/_build/native/release/bundle/tuple/tuple.mi:tuple' -i '$MOON_HOME/lib/core/_build/native/release/bundle/uint/uint.mi:uint' -i '$MOON_HOME/lib/core/_build/native/release/bundle/uint16/uint16.mi:uint16' -i '$MOON_HOME/lib/core/_build/native/release/bundle/uint64/uint64.mi:uint64' -i '$MOON_HOME/lib/core/_build/native/release/bundle/unit/unit.mi:unit' -i '$MOON_HOME/lib/core/_build/native/release/bundle/encoding/utf16/utf16.mi:utf16' -i '$MOON_HOME/lib/core/_build/native/release/bundle/encoding/utf8/utf8.mi:utf8' -pkg-sources moon/test/single:. -target native -workspace-path . -all-pkgs ./_build/native/release/build/all_pkgs.json
             moonc link-core '$MOON_HOME/lib/core/_build/native/release/bundle/abort/abort.core' '$MOON_HOME/lib/core/_build/native/release/bundle/core.core' ./_build/native/release/build/single/single.core -main moon/test/single -o ./_build/native/release/build/single/single.c -pkg-config-path ./moon.pkg.json -pkg-sources moon/test/single:. -pkg-sources 'moonbitlang/core:$MOON_HOME/lib/core' -target native
-            cc -o ./_build/native/release/build/runtime.o '-I$MOON_HOME/include' -g -c -fwrapv -fno-strict-aliasing -O2 '$MOON_HOME/lib/runtime.c'
+            cc -o ./_build/native/release/build/runtime.o '-I$MOON_HOME/include' -g -c -fwrapv -fno-strict-aliasing -O2 '$MOON_HOME/lib/runtime.c' -fPIC
             cc -o ./_build/native/release/build/single/single.exe '-I$MOON_HOME/include' -fwrapv -fno-strict-aliasing '$MOON_HOME/lib/libmoonbitrun.o' ./_build/native/release/build/single/single.c ./_build/native/release/build/runtime.o -lm '$MOON_HOME/lib/libbacktrace.a'
             ./_build/native/release/build/single/single.exe
         "#]],
@@ -1742,90 +1742,6 @@ fn test_render_diagnostic_in_patch_file() {
              2 │  let unused_in_patch_test_json = 1;
                │      ────────────┬────────────  
                │                  ╰────────────── Warning (unused_value): Unused variable 'unused_in_patch_test_json'
-               │ 
-               │ Help: # E0002
-               │       
-               │       Warning name: `unused_value`
-               │       
-               │       Unused variable.
-               │       
-               │       This variable is unused by any other part of your code, nor marked with `pub`
-               │       visibility.
-               │       
-               │       Note that this warning might uncover other bugs in your code. For example, if
-               │       there are two variables in your codebase that has similar name, you might just
-               │       use the other variable by mistake.
-               │       
-               │       Specifically, if the variable is at the toplevel, and the body of the module
-               │       contains side effects, the side effects will not happen.
-               │       
-               │       ## Erroneous example
-               │       
-               │       ```moonbit
-               │       ///|
-               │       let p : Int = {
-               │         side_effect.val = 42
-               │         42
-               │       }
-               │       
-               │       ///|
-               │       let side_effect : Ref[Int] = { val: 0 }
-               │       
-               │       ///|
-               │       test {
-               │         let x = 42
-               │       
-               │       }
-               │       ```
-               │       
-               │       ## Suggestion
-               │       
-               │       There are multiple ways to fix this warning:
-               │       
-               │       - If the variable is indeed useless, you can remove the definition of the
-               │         variable.
-               │       - If this variable is at the toplevel (i.e., not local), and is part of the
-               │         public API of your module, you can add the `pub` keyword to the variable.
-               │         ```moonbit
-               │       
-               │         ///|
-               │         pub let p = 42
-               │         ```
-               │       - If you made a typo in the variable name, you can rename the variable to the
-               │         correct name at the use site.
-               │       - If your code depends on the side-effect of the variable, you can wrap the
-               │         side-effect in a `fn init` block.
-               │         ```moonbit
-               │       
-               │         ///|
-               │         let side_effect : Ref[Int] = { val: 0 }
-               │       
-               │         ///|
-               │         fn init {
-               │           side_effect.val = 42
-               │         }
-               │         ```
-               │       
-               │       There are some cases where you might want to keep the variable private and
-               │       unused at the same time. In this case, you can call `ignore()` on the variable
-               │       to force the use of it.
-               │       
-               │       ```moonbit
-               │       
-               │       ///|
-               │       let p_unused : Int = 42
-               │       
-               │       ///|
-               │       test {
-               │         ignore(p_unused)
-               │       }
-               │       
-               │       ///|
-               │       fn main {
-               │         let x = 42
-               │         ignore(x)
-               │       }
-               │       ```
             ───╯
             Finished. moon: ran 2 tasks, now up to date (1 warnings, 0 errors)
         "#]],
@@ -2137,7 +2053,7 @@ fn test_exports_in_native_backend() {
     );
     assert!(lib2_c.contains("_M0FP38username5hello4lib25hello()"));
 
-    // alias not works
+    // alias works — postprocess-native-exports appends a wrapper function
     let lib3_c = read(
         dir.join(BUILD_DIR)
             .join("native")
@@ -2147,6 +2063,11 @@ fn test_exports_in_native_backend() {
             .join("lib3.c"),
     );
     assert!(lib3_c.contains("_M0FP38username5hello4lib35hello()"));
+    // The alias wrapper should be present in the generated C file
+    assert!(
+        lib3_c.contains("awesome(void)"),
+        "Expected alias wrapper 'awesome(void)' in lib3.c"
+    );
 }
 
 #[test]
@@ -2995,7 +2916,7 @@ fn moon_test_target_js_panic_with_sourcemap() {
         // should keep in this format, it's used in ide test explorer
         expect![[r#"
             [username/hello] test lib/hello_test.mbt:1 ("hello") failed: Error
-                at $panic ($ROOT/_build/js/debug/test/lib/lib.blackbox_test.js:16:9)
+                at $panic ($ROOT/_build/js/debug/test/lib/lib.blackbox_test.js:19:9)
                 at f ($ROOT/src/lib/hello_test.mbt:3:5)
                 at moonbit_test_driver_internal_js_catch ($ROOT/src/lib/__generated_driver_for_blackbox_test.mbt:349:11)
             Total tests: 1, passed: 0, failed: 1."#]],
@@ -3242,4 +3163,143 @@ fn test_moon_install_global_git_url_root_wildcard() {
         assert!(install_path.join("tool1.exe").exists());
         assert!(install_path.join("tool2.exe").exists());
     }
+}
+
+/// Test that `moon build ./lib --target native --output-type shared` on a non-main
+/// package with `link.native.exports` produces a shared library (.dylib/.so/.dll).
+#[test]
+fn library_output_native_shared() {
+    let dir = TestDir::new("library_output_cli.in");
+    let output = get_stdout(
+        &dir,
+        [
+            "build",
+            "./lib",
+            "--dry-run",
+            "--nostd",
+            "--target",
+            "native",
+            "--output-type",
+            "shared",
+        ],
+    );
+    assert!(
+        output.contains("link-core"),
+        "Expected link-core command in dry-run output for native shared library, got: {}",
+        output
+    );
+    assert!(
+        output.contains("-exported_functions=hello"),
+        "Expected -exported_functions in link-core command, got: {}",
+        output
+    );
+    // Should produce a shared library (platform-dependent extension)
+    assert!(
+        output.contains(".dylib") || output.contains(".so") || output.contains(".dll"),
+        "Expected shared library output (.dylib/.so/.dll), got: {}",
+        output
+    );
+    // On Unix, shared libraries use -shared flag.
+    // On Windows (MSVC), shared libraries use /DLL linker flag instead.
+    assert!(
+        output.contains("-shared") || output.contains(".dll"),
+        "Expected shared library build (-shared or .dll output), got: {}",
+        output
+    );
+    assert!(
+        !output.contains("-is-main"),
+        "Library output should NOT have -is-main flag, got: {}",
+        output
+    );
+}
+
+/// Test that `moon build ./lib --target native --output-type static` on a non-main
+/// package with `link.native.exports` produces a static library (.a/.lib).
+#[test]
+fn library_output_native_static() {
+    let dir = TestDir::new("library_output_cli.in");
+    let output = get_stdout(
+        &dir,
+        [
+            "build",
+            "./lib",
+            "--dry-run",
+            "--nostd",
+            "--target",
+            "native",
+            "--output-type",
+            "static",
+        ],
+    );
+    assert!(
+        output.contains("link-core"),
+        "Expected link-core command in dry-run output for native static library, got: {}",
+        output
+    );
+    assert!(
+        output.contains("-exported_functions=hello"),
+        "Expected -exported_functions in link-core command, got: {}",
+        output
+    );
+    // Should produce a static library via ar
+    assert!(
+        output.contains(".a") || output.contains(".lib"),
+        "Expected static library output (.a/.lib), got: {}",
+        output
+    );
+    // Static library should use ar archiver
+    assert!(
+        output.contains("ar"),
+        "Expected ar archiver command for static library, got: {}",
+        output
+    );
+    assert!(
+        !output.contains("-is-main"),
+        "Library output should NOT have -is-main flag, got: {}",
+        output
+    );
+}
+
+/// Test that `--output-type` with a non-native target produces an error.
+#[test]
+fn library_output_type_requires_native_target() {
+    let dir = TestDir::new("library_output_cli.in");
+    let stderr = get_err_stderr(
+        &dir,
+        [
+            "build",
+            "./lib",
+            "--dry-run",
+            "--nostd",
+            "--target",
+            "wasm-gc",
+            "--output-type",
+            "shared",
+        ],
+    );
+    assert!(
+        stderr.contains("--output-type requires --target native"),
+        "Expected error about --output-type requiring native target, got: {}",
+        stderr
+    );
+}
+
+/// Test that `--output-type` with an invalid value produces a parse error.
+#[test]
+fn library_output_type_invalid_value() {
+    let dir = TestDir::new("library_output_cli.in");
+    let stderr = get_err_stderr(
+        &dir,
+        [
+            "build",
+            "./lib",
+            "--output-type",
+            "invalid",
+        ],
+    );
+    assert!(
+        stderr.contains("invalid output type") || stderr.contains("'shared' or 'static'"),
+        "Expected parse error for invalid output type, got: {}",
+        stderr
+    );
 }

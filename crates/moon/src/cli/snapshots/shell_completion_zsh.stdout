@@ -104,6 +104,7 @@ _arguments "${_arguments_options[@]}" : \
 '--install-path=[]:INSTALL_PATH:_files' \
 '--package=[]:PACKAGE: ' \
 '--bin-alias=[]:BIN_ALIAS: ' \
+'--output-type=[Output type for native library builds (shared or static). Only valid with --target native]:OUTPUT_TYPE: ' \
 '--manifest-path=[Path to \`moon.mod.json\` or \`moon.work.json\` to use as the project manifest (does not change the working directory)]:PATH:_files' \
 '--target-dir=[The target directory. Defaults to \`<project-root>/_build\`]:TARGET_DIR:_files' \
 '(--nostd)--std[Enable the standard library (default)]' \

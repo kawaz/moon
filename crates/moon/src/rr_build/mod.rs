@@ -434,6 +434,8 @@ pub struct CompilePreConfig {
     /// Attempt to use `tcc -run` when possible
     pub try_tcc_run: bool,
     warn_list: Option<String>,
+    /// Native library output type (shared/static), set via CLI --output-type
+    pub native_output_type: Option<moonutil::package::NativeOutputType>,
 }
 
 impl CompilePreConfig {
@@ -500,6 +502,7 @@ impl CompilePreConfig {
             warn_list: self.warn_list,
             info_no_alias: self.info_no_alias,
             default_cc: CC::default(), // TODO: determine how CC will be set
+            native_output_type: self.native_output_type,
         }
     }
 }
@@ -548,6 +551,7 @@ pub fn preconfig_compile(
             WarningCondition::Default
         },
         warn_list: build_flags.warn_list.clone(),
+        native_output_type: None,
     }
 }
 

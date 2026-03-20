@@ -113,6 +113,7 @@ complete -c moon -n "__fish_moon_using_subcommand build" -l render-no-loc -d 'Re
 complete -c moon -n "__fish_moon_using_subcommand build" -l install-path -r -F
 complete -c moon -n "__fish_moon_using_subcommand build" -l package -r
 complete -c moon -n "__fish_moon_using_subcommand build" -l bin-alias -r
+complete -c moon -n "__fish_moon_using_subcommand build" -l output-type -d 'Output type for native library builds (shared or static). Only valid with --target native' -r
 complete -c moon -n "__fish_moon_using_subcommand build" -l manifest-path -d 'Path to `moon.mod.json` or `moon.work.json` to use as the project manifest (does not change the working directory)' -r -F
 complete -c moon -n "__fish_moon_using_subcommand build" -l target-dir -d 'The target directory. Defaults to `<project-root>/_build`' -r -F
 complete -c moon -n "__fish_moon_using_subcommand build" -l std -d 'Enable the standard library (default)'

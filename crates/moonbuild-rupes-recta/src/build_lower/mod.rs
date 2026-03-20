@@ -76,6 +76,8 @@ pub struct BuildOptions {
     pub compiler_paths: CompilerPaths,
     /// Preferred default C/C++ toolchain to use (overrides CC::default()).
     pub default_cc: CC,
+    /// Native library output type (shared/static), set via CLI --output-type
+    pub native_output_type: Option<moonutil::package::NativeOutputType>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]

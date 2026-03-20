@@ -133,6 +133,7 @@ Register-ArgumentCompleter -Native -CommandName 'moon' -ScriptBlock {
             [CompletionResult]::new('--install-path', 'install-path', [CompletionResultType]::ParameterName, 'install-path')
             [CompletionResult]::new('--package', 'package', [CompletionResultType]::ParameterName, 'package')
             [CompletionResult]::new('--bin-alias', 'bin-alias', [CompletionResultType]::ParameterName, 'bin-alias')
+            [CompletionResult]::new('--output-type', 'output-type', [CompletionResultType]::ParameterName, 'Output type for native library builds (shared or static). Only valid with --target native')
             [CompletionResult]::new('--manifest-path', 'manifest-path', [CompletionResultType]::ParameterName, 'Path to `moon.mod.json` or `moon.work.json` to use as the project manifest (does not change the working directory)')
             [CompletionResult]::new('--target-dir', 'target-dir', [CompletionResultType]::ParameterName, 'The target directory. Defaults to `<project-root>/_build`')
             [CompletionResult]::new('--std', 'std', [CompletionResultType]::ParameterName, 'Enable the standard library (default)')

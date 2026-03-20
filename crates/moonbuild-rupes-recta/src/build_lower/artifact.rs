@@ -303,6 +303,46 @@ impl LegacyLayout {
         base_dir
     }
 
+    /// Returns the output path for a shared library artifact (.so/.dylib/.dll for native,
+    /// .wasm/.js for other backends).
+    pub fn library_of_build_target(
+        &self,
+        pkg_list: &DiscoverResult,
+        target: &BuildTarget,
+        backend: RunBackend,
+        os: OperatingSystem,
+        wasm_use_wat: bool,
+    ) -> PathBuf {
+        let pkg_fqn = &pkg_list.get_package(target.package).fqn;
+        let mut base_dir = self.package_dir(pkg_fqn, backend.into());
+        base_dir.push(format!(
+            "{}{}",
+            artifact(pkg_fqn, target.kind),
+            make_library_artifact_ext(backend, os, wasm_use_wat),
+        ));
+        base_dir
+    }
+
+    /// Returns the output path for a static library artifact (.a/.lib for native,
+    /// .wasm/.js for other backends).
+    pub fn static_library_of_build_target(
+        &self,
+        pkg_list: &DiscoverResult,
+        target: &BuildTarget,
+        backend: RunBackend,
+        os: OperatingSystem,
+        wasm_use_wat: bool,
+    ) -> PathBuf {
+        let pkg_fqn = &pkg_list.get_package(target.package).fqn;
+        let mut base_dir = self.package_dir(pkg_fqn, backend.into());
+        base_dir.push(format!(
+            "{}{}",
+            artifact(pkg_fqn, target.kind),
+            make_static_library_artifact_ext(backend, os, wasm_use_wat),
+        ));
+        base_dir
+    }
+
     pub fn generated_test_driver(
         &self,
         pkg_list: &DiscoverResult,
@@ -585,7 +625,6 @@ fn static_library_ext(os: OperatingSystem) -> &'static str {
 }
 
 /// Returns the file extension for dynamic libraries on the given OS
-#[allow(unused)]
 fn dynamic_library_ext(os: OperatingSystem) -> &'static str {
     match os {
         OperatingSystem::Windows => ".dll",
@@ -601,6 +640,34 @@ fn object_file_ext(os: OperatingSystem) -> &'static str {
         OperatingSystem::Windows => ".obj",
         OperatingSystem::Linux | OperatingSystem::MacOS => ".o",
         OperatingSystem::None => panic!("No object file extension for no-OS targets"),
+    }
+}
+
+fn make_library_artifact_ext(
+    backend: RunBackend,
+    os: OperatingSystem,
+    wasm_use_wat: bool,
+) -> &'static str {
+    match backend {
+        RunBackend::Wasm | RunBackend::WasmGC if wasm_use_wat => ".wat",
+        RunBackend::Wasm | RunBackend::WasmGC => ".wasm",
+        RunBackend::Js => ".js",
+        RunBackend::Native | RunBackend::Llvm => dynamic_library_ext(os),
+        RunBackend::NativeTccRun => ".rspfile",
+    }
+}
+
+fn make_static_library_artifact_ext(
+    backend: RunBackend,
+    os: OperatingSystem,
+    wasm_use_wat: bool,
+) -> &'static str {
+    match backend {
+        RunBackend::Wasm | RunBackend::WasmGC if wasm_use_wat => ".wat",
+        RunBackend::Wasm | RunBackend::WasmGC => ".wasm",
+        RunBackend::Js => ".js",
+        RunBackend::Native | RunBackend::Llvm => static_library_ext(os),
+        RunBackend::NativeTccRun => ".rspfile",
     }
 }
 

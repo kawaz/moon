@@ -47,7 +47,7 @@ fn test_query_in_project() {
     check(
         output,
         expect![[r#"
-            package "username/proj" // username/proj@0.1.0
+            package "username/proj"
             pub fn fib(Int) -> Int64
         "#]],
     );
