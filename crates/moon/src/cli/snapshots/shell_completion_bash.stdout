@@ -279,6 +279,9 @@ _moon() {
             moon__help__tool,format-and-diff)
                 cmd="moon__help__tool__format__and__diff"
                 ;;
+            moon__help__tool,postprocess-native-exports)
+                cmd="moon__help__tool__postprocess__native__exports"
+                ;;
             moon__help__tool,write-tcc-rsp-file)
                 cmd="moon__help__tool__write__tcc__rsp__file"
                 ;;
@@ -348,6 +351,9 @@ _moon() {
             moon__tool,help)
                 cmd="moon__tool__help"
                 ;;
+            moon__tool,postprocess-native-exports)
+                cmd="moon__tool__postprocess__native__exports"
+                ;;
             moon__tool,write-tcc-rsp-file)
                 cmd="moon__tool__write__tcc__rsp__file"
                 ;;
@@ -365,6 +371,9 @@ _moon() {
                 ;;
             moon__tool__help,help)
                 cmd="moon__tool__help__help"
+                ;;
+            moon__tool__help,postprocess-native-exports)
+                cmd="moon__tool__help__postprocess__native__exports"
                 ;;
             moon__tool__help,write-tcc-rsp-file)
                 cmd="moon__tool__help__write__tcc__rsp__file"
@@ -1580,7 +1589,7 @@ _moon() {
             return 0
             ;;
         moon__help__tool)
-            opts="format-and-diff embed write-tcc-rsp-file build-binary-dep demangle"
+            opts="format-and-diff embed write-tcc-rsp-file build-binary-dep demangle postprocess-native-exports"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -1636,6 +1645,20 @@ _moon() {
             return 0
             ;;
         moon__help__tool__format__and__diff)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        moon__help__tool__postprocess__native__exports)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
@@ -2470,7 +2493,7 @@ _moon() {
             return 0
             ;;
         moon__tool)
-            opts="-q -v -h --manifest-path --target-dir --quiet --verbose --trace --dry-run --build-graph --help format-and-diff embed write-tcc-rsp-file build-binary-dep demangle help"
+            opts="-q -v -h --manifest-path --target-dir --quiet --verbose --trace --dry-run --build-graph --help format-and-diff embed write-tcc-rsp-file build-binary-dep demangle postprocess-native-exports help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -2612,7 +2635,7 @@ _moon() {
             return 0
             ;;
         moon__tool__help)
-            opts="format-and-diff embed write-tcc-rsp-file build-binary-dep demangle help"
+            opts="format-and-diff embed write-tcc-rsp-file build-binary-dep demangle postprocess-native-exports help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -2695,6 +2718,20 @@ _moon() {
             COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
             return 0
             ;;
+        moon__tool__help__postprocess__native__exports)
+            opts=""
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
         moon__tool__help__write__tcc__rsp__file)
             opts=""
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 4 ]] ; then
@@ -2702,6 +2739,28 @@ _moon() {
                 return 0
             fi
             case "${prev}" in
+                *)
+                    COMPREPLY=()
+                    ;;
+            esac
+            COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+            return 0
+            ;;
+        moon__tool__postprocess__native__exports)
+            opts="-q -v -h --manifest-path --target-dir --quiet --verbose --trace --dry-run --build-graph --help <C_FILE> <EXPORTED_FUNCTIONS>"
+            if [[ ${cur} == -* || ${COMP_CWORD} -eq 3 ]] ; then
+                COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
+                return 0
+            fi
+            case "${prev}" in
+                --manifest-path)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
+                --target-dir)
+                    COMPREPLY=($(compgen -f "${cur}"))
+                    return 0
+                    ;;
                 *)
                     COMPREPLY=()
                     ;;
